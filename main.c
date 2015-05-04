@@ -6,7 +6,9 @@ int main()
 {
   matrix *mtr = read_matrix("big_matrix.dat");
 
-  tridiagonalmatrix_parallel_solve(mtr);
+  printf("result\n");
+  print_vector(tridiagonalmatrix_left_solve(mtr), mtr->size, "%lf ");
+  printf("\n");
 
   return 0;
 }

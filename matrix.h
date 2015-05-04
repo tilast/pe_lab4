@@ -229,4 +229,6 @@ double* tridiagonalmatrix_parallel_solve(matrix* mtr)
       }
     }
   }
+
+  return xs;
 }
