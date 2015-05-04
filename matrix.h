@@ -147,7 +147,7 @@ double* tridiagonalmatrix_left_solve(matrix* mtr)
   return xs;
 }
 
-void calculate_alphas_and_betas(matrix mtr, double* alphas, double* betas, int p)
+void calculate_alphas_and_betas(matrix* mtr, double* alphas, double* betas, int p)
 {
   double** A    = mtr->A;
   double*  b    = mtr->b;
@@ -168,7 +168,7 @@ void calculate_alphas_and_betas(matrix mtr, double* alphas, double* betas, int p
   }
 }
 
-void calculate_xies_and_etas(matrix mtr, double* xies, double* etas, int p)
+void calculate_xies_and_etas(matrix* mtr, double* xies, double* etas, int p)
 {
   double** A    = mtr->A;
   double*  b    = mtr->b;
