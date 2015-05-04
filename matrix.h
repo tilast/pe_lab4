@@ -202,11 +202,11 @@ double* tridiagonalmatrix_parallel_solve(matrix* mtr)
   {
     #pragma omp section
     {
-      calculate_alphas_and_betas(mtx, alphas, betas, p);
+      calculate_alphas_and_betas(mtr, alphas, betas, p);
     }
     #pragma omp section
     {
-      calculate_alphas_and_betas(mtx, xies, etas, p);
+      calculate_alphas_and_betas(mtr, xies, etas, p);
     }
   }
 
@@ -231,6 +231,6 @@ double* tridiagonalmatrix_parallel_solve(matrix* mtr)
   }
 
   printf("result:\n");
-  print_vector(xs, size, "%.10lf ");
+  print_vector(xs, mtr->size, "%.10lf ");
   printf("\n");
 }
