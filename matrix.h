@@ -152,7 +152,7 @@ void calculate_alphas_and_betas(matrix mtx, double* alphas, double* betas, int p
   double** A    = mtr->A;
   double*  b    = mtr->b;
   int      size = mtr->size;
-  
+
   // calculate initial alpha and beta
   alphas[0] = 0;
   betas[0]  = 0;
@@ -175,8 +175,8 @@ void calculate_xies_and_etas(matrix mtx, double* xies, double* etas, int p)
   int      size = mtr->size;
 
   // calculate initial alpha and beta
-  alphas[0] = 0;
-  betas[0]  = 0;
+  xies[0] = 0;
+  etas[0]  = 0;
   xies[size-1] = - A[size-1][size-2] / A[size-1][size-1];
   etas[size-1] = b[size-1] / A[size-1][size-1];
 
@@ -210,7 +210,7 @@ double* tridiagonalmatrix_parallel_solve(matrix* mtr)
     }
   }
 
-  x[p] = (alphas[p+1]*etas[p+1] + betas[p+1]) / (1 - alphas[p+1]*xies[p+1]);
+  xs[p] = (alphas[p+1]*etas[p+1] + betas[p+1]) / (1 - alphas[p+1]*xies[p+1]);
 
   #pragma omp parallel sections
   {
