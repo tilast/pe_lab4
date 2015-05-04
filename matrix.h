@@ -152,10 +152,7 @@ void calculate_alphas_and_betas(matrix mtx, double* alphas, double* betas, int p
   double** A    = mtr->A;
   double*  b    = mtr->b;
   int      size = mtr->size;
-
-  alphas = allocate(double, size);
-  betas  = allocate(double, size);
-
+  
   // calculate initial alpha and beta
   alphas[0] = 0;
   betas[0]  = 0;
@@ -177,9 +174,6 @@ void calculate_xies_and_etas(matrix mtx, double* xies, double* etas, int p)
   double*  b    = mtr->b;
   int      size = mtr->size;
 
-  xies = allocate(double, size);
-  etas = allocate(double, size);
-
   // calculate initial alpha and beta
   alphas[0] = 0;
   betas[0]  = 0;
@@ -198,11 +192,11 @@ void calculate_xies_and_etas(matrix mtx, double* xies, double* etas, int p)
 double* tridiagonalmatrix_parallel_solve(matrix* mtr)
 {
   int p = mtr->size / 2 + (mtr->size % 2);
-  double* alphas;
-  double* betas;
-  double* xies;
-  double* etas;
-  double* xs = allocate(double, mtr->size);
+  double* alphas = allocate(double, mtr->size);
+  double* betas  = allocate(double, mtr->size);
+  double* xies   = allocate(double, mtr->size);
+  double* etas   = allocate(double, mtr->size);
+  double* xs     = allocate(double, mtr->size);
 
   #pragma omp parallel sections
   {
