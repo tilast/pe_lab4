@@ -223,7 +223,7 @@ double* tridiagonalmatrix_parallel_solve(matrix* mtr)
     }
     #pragma omp section
     {
-      for(int i = p + 1; i < size - 1; ++i)
+      for(int i = p + 1; i < mtr->size - 1; ++i)
       {
         xs[i + 1] = xies[i+1] * xs[i] + etas[i+1];
       }
