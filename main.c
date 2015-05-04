@@ -4,7 +4,7 @@
 
 int main()
 {
-  matrix *mtr = read_matrix("matrix2.dat");
+  matrix *mtr = read_matrix("big_matrix.dat");
 
   tridiagonalmatrix_parallel_solve(mtr);
 
