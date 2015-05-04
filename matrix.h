@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <omp.h>
 
 #define allocate(type, size) (type*)malloc(sizeof(type)*size)
 #define print_vector(vector, size, pattern) for(int i = 0; i < size; ++i) printf(pattern, vector[i]);
@@ -144,4 +145,98 @@ double* tridiagonalmatrix_left_solve(matrix* mtr)
   }
 
   return xs;
+}
+
+void calculate_alphas_and_betas(matrix mtx, double* alphas, double* betas, int p)
+{
+  double** A    = mtr->A;
+  double*  b    = mtr->b;
+  int      size = mtr->size;
+
+  alphas = allocate(double, size);
+  betas  = allocate(double, size);
+
+  // calculate initial alpha and beta
+  alphas[0] = 0;
+  betas[0]  = 0;
+  alphas[1] = - A[0][1] / A[0][0];
+  betas[1]  = b[0] / A[0][0];
+
+  double denominator;
+  for(int i = 1; i <= p; ++i)
+  {
+    denominator = (A[i][i] + alphas[i]*A[i][i-1]);
+    alphas[i + 1] = (-A[i][i+1]) / denominator;
+    betas[i + 1]  = (b[i] - A[i][i-1]*betas[i]) / denominator;
+  }
+}
+
+void calculate_xies_and_etas(matrix mtx, double* xies, double* etas, int p)
+{
+  double** A    = mtr->A;
+  double*  b    = mtr->b;
+  int      size = mtr->size;
+
+  xies = allocate(double, size);
+  etas = allocate(double, size);
+
+  // calculate initial alpha and beta
+  alphas[0] = 0;
+  betas[0]  = 0;
+  xies[size-1] = - A[size-1][size-2] / A[size-1][size-1];
+  etas[size-1] = b[size-1] / A[size-1][size-1];
+
+  double denominator;
+  for(int i = size - 2; i >= p; --i)
+  {
+    denominator = (A[i][i] + xies[i+1]*A[i][i+1]);
+    xies[i] = (-A[i][i-1]) / denominator;
+    etas[i] = (b[i] - A[i][i+1]*etas[i+1]) / denominator;
+  }
+}
+
+double* tridiagonalmatrix_parallel_solve(matrix* mtr)
+{
+  int p = mtr->size / 2 + (mtr->size % 2);
+  double* alphas;
+  double* betas;
+  double* xies;
+  double* etas;
+  double* xs = allocate(double, mtr->size);
+
+  #pragma omp parallel sections
+  {
+    #pragma omp section
+    {
+      calculate_alphas_and_betas(mtx, alphas, betas, p);
+    }
+    #pragma omp section
+    {
+      calculate_alphas_and_betas(mtx, xies, etas, p);
+    }
+  }
+
+  x[p] = (alphas[p+1]*etas[p+1] + betas[p+1]) / (1 - alphas[p+1]*xies[p+1]);
+
+  #pragma omp parallel sections
+  {
+    #pragma omp section
+    {
+      for(int i = p - 1; i >= 0; --i)
+      {
+        xs[i] = alphas[i+1] * xs[i+1] + betas[i+1];
+      }
+    }
+    #pragma omp section
+    {
+      for(int i = p + 1; i < size - 1; ++i)
+      {
+        xs[i + 1] = xies[i+1] * xs[i] + etas[i+1];
+      }
+    }
+  }
+
+  printf("result:\n");
+  print_vector(xs, size, "%.10lf ");
+  printf("\n");
 }
