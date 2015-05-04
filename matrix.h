@@ -206,7 +206,7 @@ double* tridiagonalmatrix_parallel_solve(matrix* mtr)
     }
     #pragma omp section
     {
-      calculate_alphas_and_betas(mtr, xies, etas, p);
+      calculate_xies_and_etas(mtr, xies, etas, p);
     }
   }
 
@@ -223,14 +223,10 @@ double* tridiagonalmatrix_parallel_solve(matrix* mtr)
     }
     #pragma omp section
     {
-      for(int i = p + 1; i < mtr->size - 1; ++i)
+      for(int i = p; i < mtr->size - 1; ++i)
       {
         xs[i + 1] = xies[i+1] * xs[i] + etas[i+1];
       }
     }
   }
-
-  printf("result:\n");
-  print_vector(xs, mtr->size, "%.10lf ");
-  printf("\n");
 }
