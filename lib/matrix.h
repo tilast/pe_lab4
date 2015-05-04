@@ -44,19 +44,14 @@ matrix* read_matrix(char * filename)
     for(int j = 0; j < m->size; ++j)
     {
       fscanf(file, "%lf", &(m->A[i][j]));
-      printf("%lf ", m->A[i][j]);
     }
-    printf("\n");
   }
-  printf("\n");
 
   m->b = allocate(double, m->size);
   for(int i = 0; i < m->size; ++i)
   {
     fscanf(file, "%lf", &(m->b[i]));
-    printf("%lf ", m->b[i]);
   }
-  printf("\n");
 
   return m;
 }
