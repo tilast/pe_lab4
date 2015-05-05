@@ -6,11 +6,24 @@
 
 int main()
 {
-  matrix *mtr = read_matrix("./data/with_ruby_10000.dat");
+  // Initialize the MPI environment
+  MPI_Init(NULL, NULL);
+  // Find out rank, size
+  int world_rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+  int world_size;
+  MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-  // clock_t start;
-  // clock_t end;
-  // float seconds;
+  // We are assuming at least 2 processes for this task
+  if (world_size != 2) {
+    fprintf(stderr, "This taks can be executed in 2 processes only %s\n", argv[0]);
+    MPI_Abort(MPI_COMM_WORLD, 1); 
+
+    return 1;
+  }
+
+  // matrix *mtr = read_matrix("./data/with_ruby_10000.dat");
+  matrix *mtr = read_matrix("./data/big_matrix.dat");
 
   int p = mtr->size / 2 + (mtr->size % 2);
   double* alphas = allocate(double, mtr->size);
@@ -19,36 +32,55 @@ int main()
   double* etas   = allocate(double, mtr->size);
   double* xs     = allocate(double, mtr->size);
 
-  #pragma omp parallel sections
+  if(world_rank == 0)
   {
-    #pragma omp section
-    {
-      calculate_alphas_and_betas(mtr, alphas, betas, p);
-    }
-    #pragma omp section
-    {
-      calculate_xies_and_etas(mtr, xies, etas, p);
-    }
+    calculate_alphas_and_betas(mtr, alphas, betas, p);
+    MPI_ISend(alphas, mtr->size, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD);
+    MPI_ISend(betas, mtr->size, MPI_DOUBLE, 1, 1, MPI_COMM_WORLD);
+
+    MPI_IRecv(xies, mtr->size, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_IRecv(etas, mtr->size, MPI_DOUBLE, 0, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   }
+  else
+  {
+    calculate_xies_and_etas(mtr, xies, etas, p);
+    MPI_ISend(xies, mtr->size, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
+    MPI_ISend(etas, mtr->size, MPI_DOUBLE, 0, 3, MPI_COMM_WORLD);
+
+    MPI_IRecv(alphas, mtr->size, MPI_DOUBLE, 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_IRecv(betas, mtr->size, MPI_DOUBLE, 1, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD);
 
   xs[p] = (alphas[p+1]*etas[p+1] + betas[p+1]) / (1 - alphas[p+1]*xies[p+1]);
 
-  #pragma omp parallel sections
+
+  if(world_rank == 0)
   {
-    #pragma omp section
+    for(int i = p - 1; i >= 0; --i)
     {
-      for(int i = p - 1; i >= 0; --i)
-      {
-        xs[i] = alphas[i+1] * xs[i+1] + betas[i+1];
-      }
+      xs[i] = alphas[i+1] * xs[i+1] + betas[i+1];
     }
-    #pragma omp section
+
+    double* xs_temp = allocate(double, mtr->size);
+    MPI_Recv(xs_temp, mtr->size, MPI_DOUBLE, 1, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+    for(int i = 0; i < p; ++i)
     {
-      for(int i = p; i < mtr->size - 1; ++i)
-      {
-        xs[i + 1] = xies[i+1] * xs[i] + etas[i+1];
-      }
+      xs[i] = xs_temp[i];
     }
+
+    print_vector(xs, mtr->size, double);
+  }
+  else
+  {
+    for(int i = p; i < mtr->size - 1; ++i)
+    {
+      xs[i + 1] = xies[i+1] * xs[i] + etas[i+1];
+    }
+
+    MPI_Send(xs, mtr->size, MPI_DOUBLE, 0, 4, MPI_COMM_WORLD);
   }
 
   return 0;
