@@ -6,6 +6,7 @@
 
 int main(int argc, char** argv)
 {
+  MPI_Request request = MPI_REQUEST_NULL;
   // Initialize the MPI environment
   MPI_Init(NULL, NULL);
   // Find out rank, size
@@ -22,8 +23,8 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  // matrix *mtr = read_matrix("./data/with_ruby_10000.dat");
-  matrix *mtr = read_matrix("./data/big_matrix.dat");
+  matrix *mtr = read_matrix("./data/with_ruby_10000.dat");
+  // matrix *mtr = read_matrix("./data/big_matrix.dat");
 
   int p = mtr->size / 2 + (mtr->size % 2);
   double* alphas = allocate(double, mtr->size);
@@ -35,24 +36,25 @@ int main(int argc, char** argv)
   if(world_rank == 0)
   {
     calculate_alphas_and_betas(mtr, alphas, betas, p);
+    
     MPI_Send(alphas, mtr->size, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD);
     MPI_Send(betas, mtr->size, MPI_DOUBLE, 1, 1, MPI_COMM_WORLD);
 
-    MPI_Recv(xies, mtr->size, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    MPI_Recv(etas, mtr->size, MPI_DOUBLE, 0, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(xies, mtr->size, MPI_DOUBLE, 1, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(etas, mtr->size, MPI_DOUBLE, 1, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   }
   else
   {
     calculate_xies_and_etas(mtr, xies, etas, p);
+
+    MPI_Recv(alphas, mtr->size, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(betas, mtr->size, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
     MPI_Send(xies, mtr->size, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
     MPI_Send(etas, mtr->size, MPI_DOUBLE, 0, 3, MPI_COMM_WORLD);
-
-    MPI_Recv(alphas, mtr->size, MPI_DOUBLE, 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    MPI_Recv(betas, mtr->size, MPI_DOUBLE, 1, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   }
 
   xs[p] = (alphas[p+1]*etas[p+1] + betas[p+1]) / (1 - alphas[p+1]*xies[p+1]);
-
 
   if(world_rank == 0)
   {
@@ -64,12 +66,14 @@ int main(int argc, char** argv)
     double* xs_temp = allocate(double, mtr->size);
     MPI_Recv(xs_temp, mtr->size, MPI_DOUBLE, 1, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-    for(int i = 0; i < p; ++i)
+    for(int i = p; i < mtr->size; ++i)
     {
       xs[i] = xs_temp[i];
     }
 
-    print_vector(xs, mtr->size, "%lf ");
+    // printf("result:\n");
+    // print_vector(xs, mtr->size, "%lf ");
+    // printf("\n");
   }
   else
   {
