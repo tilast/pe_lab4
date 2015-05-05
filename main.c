@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "./lib/matrix.h"
+#include "./lib/omp.h"
 
 int main()
 {

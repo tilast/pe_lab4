@@ -1,0 +1,55 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <mpi.h>
+#include "./lib/matrix.h"
+
+int main()
+{
+  matrix *mtr = read_matrix("./data/with_ruby_10000.dat");
+
+  // clock_t start;
+  // clock_t end;
+  // float seconds;
+
+  int p = mtr->size / 2 + (mtr->size % 2);
+  double* alphas = allocate(double, mtr->size);
+  double* betas  = allocate(double, mtr->size);
+  double* xies   = allocate(double, mtr->size);
+  double* etas   = allocate(double, mtr->size);
+  double* xs     = allocate(double, mtr->size);
+
+  #pragma omp parallel sections
+  {
+    #pragma omp section
+    {
+      calculate_alphas_and_betas(mtr, alphas, betas, p);
+    }
+    #pragma omp section
+    {
+      calculate_xies_and_etas(mtr, xies, etas, p);
+    }
+  }
+
+  xs[p] = (alphas[p+1]*etas[p+1] + betas[p+1]) / (1 - alphas[p+1]*xies[p+1]);
+
+  #pragma omp parallel sections
+  {
+    #pragma omp section
+    {
+      for(int i = p - 1; i >= 0; --i)
+      {
+        xs[i] = alphas[i+1] * xs[i+1] + betas[i+1];
+      }
+    }
+    #pragma omp section
+    {
+      for(int i = p; i < mtr->size - 1; ++i)
+      {
+        xs[i + 1] = xies[i+1] * xs[i] + etas[i+1];
+      }
+    }
+  }
+
+  return 0;
+}
