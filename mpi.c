@@ -4,7 +4,7 @@
 #include <mpi.h>
 #include "./lib/matrix.h"
 
-int main()
+int main(int argc, char** argv)
 {
   // Initialize the MPI environment
   MPI_Init(NULL, NULL);
@@ -35,23 +35,21 @@ int main()
   if(world_rank == 0)
   {
     calculate_alphas_and_betas(mtr, alphas, betas, p);
-    MPI_ISend(alphas, mtr->size, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD);
-    MPI_ISend(betas, mtr->size, MPI_DOUBLE, 1, 1, MPI_COMM_WORLD);
+    MPI_Send(alphas, mtr->size, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD);
+    MPI_Send(betas, mtr->size, MPI_DOUBLE, 1, 1, MPI_COMM_WORLD);
 
-    MPI_IRecv(xies, mtr->size, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    MPI_IRecv(etas, mtr->size, MPI_DOUBLE, 0, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(xies, mtr->size, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(etas, mtr->size, MPI_DOUBLE, 0, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   }
   else
   {
     calculate_xies_and_etas(mtr, xies, etas, p);
-    MPI_ISend(xies, mtr->size, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
-    MPI_ISend(etas, mtr->size, MPI_DOUBLE, 0, 3, MPI_COMM_WORLD);
+    MPI_Send(xies, mtr->size, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
+    MPI_Send(etas, mtr->size, MPI_DOUBLE, 0, 3, MPI_COMM_WORLD);
 
-    MPI_IRecv(alphas, mtr->size, MPI_DOUBLE, 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    MPI_IRecv(betas, mtr->size, MPI_DOUBLE, 1, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(alphas, mtr->size, MPI_DOUBLE, 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(betas, mtr->size, MPI_DOUBLE, 1, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   }
-
-  MPI_Barrier(MPI_COMM_WORLD);
 
   xs[p] = (alphas[p+1]*etas[p+1] + betas[p+1]) / (1 - alphas[p+1]*xies[p+1]);
 
@@ -71,7 +69,7 @@ int main()
       xs[i] = xs_temp[i];
     }
 
-    print_vector(xs, mtr->size, double);
+    print_vector(xs, mtr->size, "%lf ");
   }
   else
   {
