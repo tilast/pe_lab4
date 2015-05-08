@@ -6,7 +6,7 @@
 
 int main()
 {
-  matrix *mtr = read_matrix("./data/with_ruby_10000.dat");
+  matrix *mtr = read_matrix("./data/big_matrix.dat");
 
   clock_t start;
   clock_t end;
@@ -26,7 +26,7 @@ int main()
   printf("right: %lf\n", seconds);
 
   start = clock();
-    tridiagonalmatrix_parallel_solve(mtr);
+    print_vector(tridiagonalmatrix_parallel_solve(mtr), mtr->size, "%lf ");
   end = clock();
   seconds = (float)(end - start) / CLOCKS_PER_SEC;
   printf("parallel: %lf\n", seconds);

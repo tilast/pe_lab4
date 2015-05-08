@@ -23,8 +23,8 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  matrix *mtr = read_matrix("./data/with_ruby_10000.dat");
-  // matrix *mtr = read_matrix("./data/big_matrix.dat");
+  // matrix *mtr = read_matrix("./data/with_ruby_10000.dat");
+  matrix *mtr = read_matrix("./data/big_matrix.dat");
 
   int p = mtr->size / 2 + (mtr->size % 2);
   double* alphas = allocate(double, mtr->size);
@@ -71,9 +71,9 @@ int main(int argc, char** argv)
       xs[i] = xs_temp[i];
     }
 
-    // printf("result:\n");
-    // print_vector(xs, mtr->size, "%lf ");
-    // printf("\n");
+    printf("result:\n");
+    print_vector(xs, mtr->size, "%lf ");
+    printf("\n");
   }
   else
   {
